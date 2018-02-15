@@ -21,9 +21,11 @@ This is an example configuration
         "platform": "http-doorbell",
         "port": 9053,
         "doorbells": [
-            "name": "Front doorbell",
-            "id": "front",
-            "duration": 2
+            {
+               "name": "Front doorbell",
+               "id": "front",
+               "duration": 2
+            }
         ]
     }
 ]

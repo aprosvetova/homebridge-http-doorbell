@@ -52,11 +52,16 @@ function DoorbellAccessory(config) {
 }
 
 DoorbellAccessory.prototype.getServices = function() {
+    var informationService = new Service.AccessoryInformation();
+    informationService
+        .setCharacteristic(Characteristic.Manufacturer, "Doorbells Inc.")
+        .setCharacteristic(Characteristic.Model, "HTTP Doorbell")
+        .setCharacteristic(Characteristic.SerialNumber, this.doorbellId);
     this.service = new Service.Doorbell(this.name);
     this.service
         .getCharacteristic(Characteristic.ProgrammableSwitchEvent)
         .on('get', this.getState.bind(this));
-    return [this.service];
+    return [informationService, this.service];
 }
 
 DoorbellAccessory.prototype.getState = function(callback) {
