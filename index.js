@@ -28,7 +28,7 @@ HTTPDoorbell.prototype.accessories = function (callback) {
     var foundAccessories = [];
     var count = this.bells.length;
     for (index = 0; index < count; index++) {
-        var accessory = new DoorbellAccessory(this.log, this.bells[index]);
+        var accessory = new DoorbellAccessory(this.bells[index]);
         if (accessory.doorbellId == 0) {
             accessory.doorbellId = index+1;
         }
@@ -57,9 +57,9 @@ DoorbellAccessory.prototype.getServices = function() {
         .setCharacteristic(Characteristic.Manufacturer, "Doorbells Inc.")
         .setCharacteristic(Characteristic.Model, "HTTP Doorbell")
         .setCharacteristic(Characteristic.SerialNumber, this.doorbellId);
-    this.service = new Service.Doorbell(this.name);
+    this.service = new Service.MotionSensor(this.name);
     this.service
-        .getCharacteristic(Characteristic.ProgrammableSwitchEvent)
+        .getCharacteristic(Characteristic.MotionDetected)
         .on('get', this.getState.bind(this));
     return [informationService, this.service];
 }
@@ -70,14 +70,14 @@ DoorbellAccessory.prototype.getState = function(callback) {
 
 DoorbellAccessory.prototype.ring = function() {
     this.binaryState = 1;
-    this.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent).updateValue(this.binaryState);
+    this.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent).updateValue(this.binaryState == 1);
     if (this.timeout) {
         clearTimeout(this.timeout);
     }
     var self = this;
     this.timeout = setTimeout(function() {
         self.binaryState = 0;
-        self.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent).updateValue(self.binaryState);
+        self.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent).updateValue(self.binaryState == 1);
         self.timeout = null;
     }, self.duration * 1000);
 }
