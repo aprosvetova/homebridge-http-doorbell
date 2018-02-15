@@ -16,7 +16,7 @@ function HTTPDoorbell(log, config) {
     this.bellsAccessories = [];
     var self = this;
     this.server = http.createServer(function(request, response) {
-        self.httpHandler(self, request.path.substring(1));
+        self.httpHandler(self, request.url.substring(1));
         response.end('Handled');
     });
     this.server.listen(this.port, function(){
