@@ -6,56 +6,73 @@ module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
 
-    homebridge.registerAccessory("homebridge-http-doorbell", "http-doorbell", HTTPDoorbell);
+    homebridge.registerPlatform("homebridge-http-doorbell", "http-doorbell", HTTPDoorbell);
 };
-
 
 function HTTPDoorbell(log, config) {
     this.log = log;
-    this.name = config.name;
     this.port = config.port;
-    this.duration = config.duration || 2;
-    this.bell = 0;
-    this.timeout = null;
-
-    var that = this;
+    this.bells = config.doorbells;
+    this.bellsAccessories = [];
+    var self = this;
     this.server = http.createServer(function(request, response) {
-        that.httpHandler(that);
+        self.httpHandler(self, request.path.substring(1));
         response.end('Handled');
     });
-
-    this.informationService = new Service.AccessoryInformation();
-    this.informationService
-        .setCharacteristic(Characteristic.Manufacturer, "Doorbells Inc.")
-        .setCharacteristic(Characteristic.Model, "HTTP Doorbell");
-
-    this.service = new Service.Doorbell(this.name);
-    this.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent)
-        .on('get', this.getState.bind(this));
-
     this.server.listen(this.port, function(){
-        that.log("Doorbell server listening on: http://<your ip goes here>:%s", that.port);
+        self.log("Doorbell server listening on: http://<your ip goes here>:%s/<doorbellId>", self.port);
     });
 }
 
-
-HTTPDoorbell.prototype.getState = function(callback) {
-    callback(null, this.bell);
-};
-
-HTTPDoorbell.prototype.httpHandler = function(that) {
-    that.bell = 1;
-    that.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent).updateValue(that.bell);
-    if (that.timeout) {
-        clearTimeout(that.timeout);
+HTTPDoorbell.prototype.accessories = function (callback) {
+    var foundAccessories = [];
+    var count = this.bells.length;
+    for (index = 0; index < count; index++) {
+        var accessory = new DoorbellAccessory(this.log, this.bells[index]);
+        if (accessory.doorbellId == 0) {
+            accessory.doorbellId = index+1;
+        }
+        this.bellsAccessories[this.bells[index].doorbellId] = accessory;
+        foundAccessories.push(accessory);
     }
-    that.timeout = setTimeout(function() {
-        that.bell = 0;
-        that.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent).updateValue(that.bell);
-        that.timeout = null;
-    }, that.duration * 1000);
+    callback(foundAccessories);
+}
+
+HTTPDoorbell.prototype.httpHandler = function(that, doorbellId) {
+    that.bellsAccessories[doorbellId].ring();
 };
 
-HTTPDoorbell.prototype.getServices = function() {
-    return [this.informationService, this.service];
-};
+function DoorbellAccessory(config) {
+    this.name = config["name"];
+    this.duration = config["duration"] || 2;
+    this.doorbellId = config["id"] || 0;
+    this.binaryState = 0;
+    this.service = null;
+    this.timeout = null;
+}
+
+DoorbellAccessory.prototype.getServices = function() {
+    this.service = new Service.Doorbell(this.name);
+    this.service
+        .getCharacteristic(Characteristic.ProgrammableSwitchEvent)
+        .on('get', this.getState.bind(this));
+    return [this.service];
+}
+
+DoorbellAccessory.prototype.getState = function(callback) {
+    callback(null, this.binaryState > 0);
+}
+
+DoorbellAccessory.prototype.ring = function() {
+    this.binaryState = 1;
+    this.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent).updateValue(this.binaryState);
+    if (this.timeout) {
+        clearTimeout(this.timeout);
+    }
+    var self = this;
+    this.timeout = setTimeout(function() {
+        self.binaryState = 0;
+        self.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent).updateValue(self.binaryState);
+        self.timeout = null;
+    }, self.duration * 1000);
+}

@@ -16,19 +16,23 @@ Chances are you are going to need sudo with that.
 This is an example configuration
 
 ```
-"accessories" : [
+"platforms" : [
     {
-        "accessory": "http-doorbell",
-        "name": "Front doorbell",
+        "platform": "http-doorbell",
         "port": 9053,
-        "duration": 2
+        "doorbells": [
+            "name": "Front doorbell",
+            "id": "front",
+            "duration": 2
+        ]
     }
 ]
 ```
 
 | Key           | Description                                                                        |
 |---------------|------------------------------------------------------------------------------------|
-| accessory     | Required. Has to be "http-doorbell"                                                |
-| name          | Required. The name of this doorbell. This will appear in your homekit app          |
+| platform      | Required. Has to be "http-doorbell"                                                |
 | port          | Required. The port that you want this plugin to listen on. Should be above 1024.   |
-| duration      | Optional. Sets doorbell duration, 2 seconds by default.                            |
+| doorbells[].name | Required. The name of this doorbell. This will appear in your homekit app       |
+| doorbells[].id | Optional. Sets doorbell id for webhook, seqeuntial from 1 by default              |
+| doorbells[].duration | Optional. Sets doorbell duration, 2 seconds by default.                     |
