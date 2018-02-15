@@ -32,7 +32,7 @@ HTTPDoorbell.prototype.accessories = function (callback) {
         if (accessory.doorbellId == 0) {
             accessory.doorbellId = index+1;
         }
-        this.bellsAccessories[this.bells[index].doorbellId] = accessory;
+        this.bellsAccessories[accessory.doorbellId] = accessory;
         foundAccessories.push(accessory);
     }
     callback(foundAccessories);
