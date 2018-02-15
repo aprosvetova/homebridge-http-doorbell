@@ -14,6 +14,7 @@ function HTTPDoorbell(log, config) {
     this.port = config.port;
     this.bells = config.doorbells;
     this.bellsAccessories = [];
+    this.bellsLastRang = [];
     var self = this;
     this.server = http.createServer(function(request, response) {
         self.httpHandler(self, request.url.substring(1));
@@ -39,6 +40,13 @@ HTTPDoorbell.prototype.accessories = function (callback) {
 }
 
 HTTPDoorbell.prototype.httpHandler = function(that, doorbellId) {
+    if (that.bellsLastRang[doorbellId]) {
+        var diff = new Date().getTime() - that.bellsLastRang[doorbellId];
+        if (diff/1000 < 10) {
+            return;
+        }
+    }
+    that.bellsLastRang[doorbellId] = new Date().getTime();
     that.bellsAccessories[doorbellId].ring();
 };
 
