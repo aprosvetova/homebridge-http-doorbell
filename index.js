@@ -70,14 +70,14 @@ DoorbellAccessory.prototype.getState = function(callback) {
 
 DoorbellAccessory.prototype.ring = function() {
     this.binaryState = 1;
-    this.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent).updateValue(this.binaryState == 1);
+    this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(this.binaryState == 1);
     if (this.timeout) {
         clearTimeout(this.timeout);
     }
     var self = this;
     this.timeout = setTimeout(function() {
         self.binaryState = 0;
-        self.service.getCharacteristic(Characteristic.ProgrammableSwitchEvent).updateValue(self.binaryState == 1);
+        self.service.getCharacteristic(Characteristic.MotionDetected).updateValue(self.binaryState == 1);
         self.timeout = null;
     }, self.duration * 1000);
 }
